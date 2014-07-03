@@ -9,7 +9,6 @@ import java.util.Arrays;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
-import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 
 public class DriveCheck extends JFrame{
@@ -18,6 +17,8 @@ public class DriveCheck extends JFrame{
 	
 	JComboBox<String> logdate;
 	JComboBox<String> computers;
+	
+	public DriveCheck dc;
 
 	public static void main(String[] args){
 		new DriveCheck();
@@ -36,16 +37,21 @@ public class DriveCheck extends JFrame{
 		this.setBounds(0, 0, 350, 500);
 		this.setLocationRelativeTo(null);
 		
+		dc = this;
+		
 		init();
 	}
 	
 	public void init(){
 		logdate = new JComboBox<String>(filterFiles(getFiles("")).toArray(new String[0]));
 		logdate.setBounds(5, 5, 335, 25);
+		if(logdate.getSelectedIndex() == -1){
+			logdate.addItem("Keine verfügbaren Berichte!");
+		}
 		
 		computers = new JComboBox<String>(filterFiles(getFiles(logdate.getSelectedItem().toString())).toArray(new String[0]));
 		if(computers.getSelectedIndex() == -1){
-			computers.addItem("Keine Verfügbaren Berichte!");
+			computers.addItem("Keine verfügbaren Computer für dieses Datum!");
 		}
 		computers.setBounds(5, 35, 335, 25);
 		
@@ -53,9 +59,9 @@ public class DriveCheck extends JFrame{
 			
 			@Override
 			public void itemStateChanged(ItemEvent ev) {
-				computers.setModel(new DefaultComboBoxModel<>(filterFiles(getFiles(ev.getItem().toString())).toArray(new String[0])));
+				computers.setModel(new DefaultComboBoxModel<String>(filterFiles(getFiles(ev.getItem().toString())).toArray(new String[0])));
 				if(computers.getSelectedIndex() == -1){
-					computers.addItem("Keine Verfügbaren Berichte!");
+					computers.addItem("Keine verfügbaren Computer für dieses Datum!");
 				}
 			}
 		});
@@ -66,30 +72,31 @@ public class DriveCheck extends JFrame{
 		this.setVisible(true);
 	}
 	
-	public ArrayList<File> getFiles(String subDir){
+	public ArrayList<StatusFile> getFiles(String subDir){
 		try{
-			File path = new File(new File(subDir).getAbsolutePath());
+			StatusFile path = new StatusFile(new File(subDir).getAbsolutePath());
 			if(subDir.isEmpty()){
-				return new ArrayList<File>(Arrays.asList(path.listFiles()));
+				return new ArrayList<StatusFile>(Arrays.asList(path.listStatusFiles()));
 			}else{
-				return new ArrayList<File>(Arrays.asList(path.listFiles(new TXTFileFilter("txt"))));
+				return new ArrayList<StatusFile>(Arrays.asList(path.listStatusFiles(new TXTFileFilter("txt"))));
 			}
-			
 		}catch(Exception e){
-			return new ArrayList<File>();
+			e.printStackTrace();
+			return new ArrayList<StatusFile>();
 		}
 	}
 	
-	public ArrayList<String> filterFiles(ArrayList<File> list){
+	public ArrayList<String> filterFiles(ArrayList<StatusFile> list){
 		ArrayList<String> flist = new ArrayList<String>();
-		for(File f : list){
-			flist.add(f.getName());
-			if(f.getName().equalsIgnoreCase("SCRIPT") || f.getPath().endsWith(".jar")){
-				flist.remove(f.getName());
+		for(StatusFile f : list){
+			if(f.getFile().isDirectory()){
+				flist.add(f.getFile().getName());
+			}
+			if(f.getFile().getName().equalsIgnoreCase("SCRIPT")){
+				flist.remove(f.getFile().getName());
 			}
 		}
 		return flist;
-		
 	}
 	
 	
