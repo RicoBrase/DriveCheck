@@ -15,6 +15,15 @@ public class StatusFile{
 	}
 	
 	public String getContent(){
+		
+		if(this.getFile().isDirectory()){
+			return "";
+		}
+		
+		this.content = "";
+		
+		readContent();
+		
 		return this.content;
 	}
 	
@@ -31,7 +40,7 @@ public class StatusFile{
 				this.content += line + System.getProperty("line.separator");
 			}
 		}catch(Exception e){
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 	}
 	
@@ -48,11 +57,14 @@ public class StatusFile{
 	
 	public StatusFile[] listStatusFiles(FileFilter filter){
 		File[] files = this.getFile().listFiles(filter);
-		StatusFile[] sfiles = new StatusFile[files.length];
-		int i = 0;
-		for(File f : files){
-			sfiles[i] = new StatusFile(f.getPath());
-			i++;
+		StatusFile[]  sfiles = new StatusFile[0];
+		if(files != null){
+			sfiles = new StatusFile[files.length];
+			int i = 0;
+			for(File f : files){
+				sfiles[i] = new StatusFile(f.getPath());
+				i++;
+			}
 		}
 		return sfiles;
 	}

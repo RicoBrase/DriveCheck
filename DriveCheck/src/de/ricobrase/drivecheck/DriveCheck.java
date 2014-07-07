@@ -15,6 +15,8 @@ public class DriveCheck extends JFrame{
 
 	private static final long serialVersionUID = 1620251908917275817L;
 	
+	private static String OK = "Status  \nOK      ";
+	
 	JComboBox<String> logdate;
 	JComboBox<String> computers;
 	
@@ -43,13 +45,13 @@ public class DriveCheck extends JFrame{
 	}
 	
 	public void init(){
-		logdate = new JComboBox<String>(filterFiles(getFiles("")).toArray(new String[0]));
+		logdate = new JComboBox<String>(getFileNames(filterFiles(getFiles(""))).toArray(new String[0]));
 		logdate.setBounds(5, 5, 335, 25);
 		if(logdate.getSelectedIndex() == -1){
 			logdate.addItem("Keine verfügbaren Berichte!");
 		}
 		
-		computers = new JComboBox<String>(filterFiles(getFiles(logdate.getSelectedItem().toString())).toArray(new String[0]));
+		computers = new JComboBox<String>(getFileNames(filterFiles(getFiles(logdate.getSelectedItem().toString()))).toArray(new String[0]));
 		if(computers.getSelectedIndex() == -1){
 			computers.addItem("Keine verfügbaren Computer für dieses Datum!");
 		}
@@ -72,6 +74,22 @@ public class DriveCheck extends JFrame{
 		this.setVisible(true);
 	}
 	
+	public ArrayList<String> getFileNames(ArrayList<StatusFile> list){
+		ArrayList<String> filenames = new ArrayList<String>();
+		
+		for(StatusFile s : list){
+			if(s.getFile().isDirectory()){
+				filenames.add(s.getFile().getName());
+			}else if(s.getContent().equalsIgnoreCase(DriveCheck.OK)){
+				filenames.add("<html><span style=\"color:#00ff00;\">"+s.getFile().getName()+ "</span></html>");
+			}else{
+				filenames.add("<html><span style=\"color:#ff0000;\">"+s.getFile().getName()+ "</span></html>");
+			}
+		}
+		
+		return filenames;
+	}
+	
 	public ArrayList<StatusFile> getFiles(String subDir){
 		try{
 			StatusFile path = new StatusFile(new File(subDir).getAbsolutePath());
@@ -86,14 +104,14 @@ public class DriveCheck extends JFrame{
 		}
 	}
 	
-	public ArrayList<String> filterFiles(ArrayList<StatusFile> list){
-		ArrayList<String> flist = new ArrayList<String>();
+	public ArrayList<StatusFile> filterFiles(ArrayList<StatusFile> list){
+		ArrayList<StatusFile> flist = new ArrayList<StatusFile>();
 		for(StatusFile f : list){
 			if(f.getFile().isDirectory()){
-				flist.add(f.getFile().getName());
+				flist.add(f);
 			}
 			if(f.getFile().getName().equalsIgnoreCase("SCRIPT")){
-				flist.remove(f.getFile().getName());
+				flist.remove(f);
 			}
 		}
 		return flist;
