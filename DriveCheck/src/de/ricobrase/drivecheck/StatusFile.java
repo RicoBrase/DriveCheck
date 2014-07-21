@@ -3,7 +3,10 @@ package de.ricobrase.drivecheck;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileFilter;
-import java.io.FileReader;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 
 public class StatusFile{
 
@@ -14,7 +17,11 @@ public class StatusFile{
 		this.file = new File(file);
 	}
 	
-	public String getContent(){
+	public boolean isOK(){
+		return getContent(false).replaceAll("\\s+", "").endsWith("StatusOK");
+	}
+	
+	public String getContent(boolean clist){
 		
 		if(this.getFile().isDirectory()){
 			return "";
@@ -22,7 +29,7 @@ public class StatusFile{
 		
 		this.content = "";
 		
-		readContent();
+		readContent(clist);
 		
 		return this.content;
 	}
@@ -31,16 +38,29 @@ public class StatusFile{
 		return this.file;
 	}
 	
-	public void readContent(){
-		BufferedReader br;
+	public void readContent(boolean clist){
+		
+		String encoding = "UTF-16LE";
+		if(clist){
+			encoding = "UTF-8";
+		}
+		
+		 BufferedReader br;
 		try{
-			br = new BufferedReader(new FileReader(this.getFile()));
+			br = new BufferedReader(new InputStreamReader(new FileInputStream(this.getFile()), encoding));
 			String line;
+			int x = 0;
 			while((line = br.readLine()) != null){
-				this.content += line + System.getProperty("line.separator");
+				if(x == 0){
+					this.content += line.trim().replaceAll("\\s+", "") + System.getProperty("line.separator");
+					x++;
+				}else{
+					this.content += line.trim() + System.getProperty("line.separator");
+				}
 			}
+//			System.out.println(this.content.replaceAll("\\s+", ""));
 		}catch(Exception e){
-			//e.printStackTrace();
+			e.printStackTrace();
 		}
 	}
 	
@@ -67,6 +87,26 @@ public class StatusFile{
 			}
 		}
 		return sfiles;
+	}
+	
+	public void writeContent(String content, boolean clist){
+		String encoding = "UTF-16LE";
+		if(clist){
+			encoding = "UTF-8";
+		}
+		try {
+			OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(this.getFile()), encoding);
+			if(this.getFile().exists()){
+				this.getFile().delete();
+			}
+			this.getFile().createNewFile();
+			writer.write(content);
+			writer.flush();
+			writer.close();
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 }
